@@ -1,3 +1,8 @@
+# Image with kubectl installed. For OpenShift, use an ose-cli image. For
+# non-OpenShift Kubernetes clusters, swap to a plain kubectl image:
+# kubectlImage: bitnami/kubectl:latest
+kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
+
 # operators is a list of OLM operator descriptors.
 #
 # Required fields per operator:
@@ -84,22 +89,3 @@
 #       env:
 #         - name: SOME_VAR
 #           value: "some-value"
-
-# Image with kubectl installed. For OpenShift, use an ose-cli image. For
-# non-OpenShift Kubernetes clusters, swap to a plain kubectl image:
-# kubectlImage: bitnami/kubectl:latest
-kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
-
-operators:
-  - name: elasticsearch-operator
-    namespace: openshift-operators
-    channel: stable
-    source: redhat-operators
-  - name: cluster-logging
-    namespace: openshift-logging
-    channel: stable
-    source: redhat-operators
-    installPlanApproval: Manual
-    version: cluster-logging.v6.3.0
-    createNamespace: true
-    createOperatorGroup: true
