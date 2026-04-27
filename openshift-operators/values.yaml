@@ -1,0 +1,86 @@
+# operators is a list of OLM operator descriptors.
+#
+# Required fields per operator:
+#   name                 Package name of the operator (used as the Subscription name).
+#   namespace            Namespace in which the Subscription (and OperatorGroup) are created.
+#   channel              OLM update channel, e.g. "stable", "alpha", "stable-v2".
+#   source               CatalogSource name, e.g. "redhat-operators", "community-operators",
+#                        "certified-operators".
+#
+# Optional fields:
+#   sourceNamespace      Namespace of the CatalogSource. Default: "openshift-marketplace".
+#   installPlanApproval  "Automatic" or "Manual". Default: "Automatic".
+#   startingCSV          Pin to a specific CSV version, e.g. "my-operator.v1.2.3".
+#                        Omit (or leave empty) to let OLM pick the latest in the channel.
+#   config               SubscriptionConfig block passed verbatim to spec.config.
+#                        Useful for env vars, resource overrides, node selectors, etc.
+#
+# Scope / OperatorGroup fields:
+#   scope                "Cluster" (global, watches all namespaces) or "Namespaced"
+#                        (watches only the listed targetNamespaces).
+#                        Default: "Cluster".
+#   targetNamespaces     List of namespaces to watch. Only meaningful when scope is
+#                        "Namespaced". Defaults to [namespace] when omitted.
+#
+# Resource-creation toggles:
+#   createNamespace      Create a Namespace resource for .namespace. Default: false.
+#   createOperatorGroup  Create an OperatorGroup in .namespace. Default: false.
+#                        NOTE: "openshift-operators" already ships with a cluster-wide
+#                        OperatorGroup ("global-operators") — do NOT set this to true
+#                        for that namespace. For any custom namespace you create, set
+#                        this to true so OLM can find a group to bind the operator.
+#
+# Examples:
+#
+# # Cluster-wide (global) operator — standard openshift-operators namespace
+# operators:
+#   - name: elasticsearch-operator
+#     namespace: openshift-operators
+#     channel: stable
+#     source: redhat-operators
+#
+# # Namespace-scoped operator in a dedicated namespace
+# operators:
+#   - name: my-operator
+#     namespace: my-operator-ns
+#     channel: alpha
+#     source: community-operators
+#     scope: Namespaced
+#     createNamespace: true
+#     createOperatorGroup: true
+#
+# # Manual approval with a pinned version
+# operators:
+#   - name: advanced-cluster-management
+#     namespace: open-cluster-management
+#     channel: release-2.10
+#     source: redhat-operators
+#     installPlanApproval: Manual
+#     startingCSV: advanced-cluster-management.v2.10.0
+#     createNamespace: true
+#     createOperatorGroup: true
+#
+# # Operator with custom SubscriptionConfig (extra env, resource limits)
+# operators:
+#   - name: jaeger-product
+#     namespace: openshift-distributed-tracing
+#     channel: stable
+#     source: redhat-operators
+#     createNamespace: true
+#     createOperatorGroup: true
+#     config:
+#       resources:
+#         requests:
+#           memory: 64Mi
+#           cpu: 250m
+#         limits:
+#           memory: 128Mi
+#       env:
+#         - name: SOME_VAR
+#           value: "some-value"
+
+operators:
+  - name: elasticsearch-operator
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators

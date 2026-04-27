@@ -1,0 +1,9 @@
+{{- range .Values.operators }}
+{{- if .createNamespace }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .namespace | quote }}
+{{- end }}
+{{- end }}
