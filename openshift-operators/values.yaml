@@ -84,3 +84,9 @@ operators:
     namespace: openshift-operators
     channel: stable
     source: redhat-operators
+  - name: cluster-logging
+    namespace: openshift-logging
+    channel: stable
+    source: redhat-operators
+    createNamespace: true
+    createOperatorGroup: true
