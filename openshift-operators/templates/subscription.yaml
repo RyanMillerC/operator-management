@@ -5,6 +5,9 @@ kind: Subscription
 metadata:
   name: {{ .name | quote }}
   namespace: {{ .namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: Prune=false
 spec:
   name: {{ .name | quote }}
   channel: {{ .channel | quote }}

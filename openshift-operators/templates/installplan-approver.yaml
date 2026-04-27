@@ -10,12 +10,16 @@ kind: ServiceAccount
 metadata:
   name: {{ printf "%s-installplan-approver" $name | quote }}
   namespace: {{ $namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ printf "%s-installplan-approver" $name | quote }}
   namespace: {{ $namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 rules:
   - apiGroups: ["operators.coreos.com"]
     resources: ["installplans"]
@@ -26,6 +30,8 @@ kind: RoleBinding
 metadata:
   name: {{ printf "%s-installplan-approver" $name | quote }}
   namespace: {{ $namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -40,6 +46,8 @@ kind: Job
 metadata:
   name: {{ $jobName | quote }}
   namespace: {{ $namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   # Auto-delete 10 minutes after completion so old version Jobs don't pile up.
   ttlSecondsAfterFinished: 600
@@ -63,29 +71,34 @@ spec:
             - |
               TARGET={{ $version | quote }}
               NS={{ $namespace | quote }}
-              echo "Waiting for InstallPlan for ${TARGET} in ${NS}..."
-              while true; do
-                for IP in $(kubectl get installplan -n "${NS}" \
-                    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
-                  CSVS=$(kubectl get installplan "${IP}" -n "${NS}" \
-                    -o jsonpath='{.spec.clusterServiceVersionNames[*]}' 2>/dev/null)
-                  case " ${CSVS} " in
-                    *" ${TARGET} "*)
-                      APPROVED=$(kubectl get installplan "${IP}" -n "${NS}" \
-                        -o jsonpath='{.spec.approved}')
-                      if [ "${APPROVED}" = "false" ]; then
-                        kubectl patch installplan "${IP}" -n "${NS}" \
-                          --type=merge -p '{"spec":{"approved":true}}'
-                        echo "Approved InstallPlan ${IP} for ${TARGET}"
-                      else
-                        echo "InstallPlan ${IP} for ${TARGET} is already approved"
-                      fi
-                      exit 0
-                      ;;
-                  esac
-                done
-                echo "No matching InstallPlan found yet, retrying in 10s..."
+
+              for attempt in $(seq 1 30); do
+                echo "[${attempt}/30] Looking for InstallPlan for ${TARGET}..."
+
+                MATCHES=$(kubectl get installplan -n "${NS}" \
+                  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.clusterServiceVersionNames[*]}{"\n"}{end}' \
+                  | grep "${TARGET}" | cut -f1)
+
+                if [ -n "${MATCHES}" ]; then
+                  for IP in ${MATCHES}; do
+                    kubectl patch installplan "${IP}" -n "${NS}" \
+                      --type=merge -p '{"spec":{"approved":true}}'
+                    echo "Approved ${IP}"
+                  done
+                  exit 0
+                fi
+
                 sleep 10
               done
+
+              # No matching InstallPlan found. Warn if other InstallPlans exist in the
+              # namespace — that likely means the version field is wrong or out of date.
+              OTHERS=$(kubectl get installplan -n "${NS}" \
+                -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.clusterServiceVersionNames[*]}{"\n"}{end}')
+              if [ -n "${OTHERS}" ]; then
+                echo "WARNING: no InstallPlan found for ${TARGET}, but others exist in ${NS}:"
+                echo "${OTHERS}"
+              fi
+              exit 0
 {{- end }}
 {{- end }}
