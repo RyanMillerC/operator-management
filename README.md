@@ -1,6 +1,6 @@
-# openshift-operators
+# operator-management
 
-Helm chart for managing OpenShift operators via OLM. Supports automatic and manual upgrade approval, with GitOps-driven InstallPlan approval for controlled version promotion across environments.
+Manage operators via OLM with declarative versioning using manual upgrade mode with auto-approving InstallPlans based on Helm values.
 
 ## How it works
 
