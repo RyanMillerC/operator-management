@@ -85,9 +85,9 @@
 #         - name: SOME_VAR
 #           value: "some-value"
 
-# Image used by the InstallPlan approval Job.
-# For non-OpenShift Kubernetes clusters, swap to a plain kubectl image:
-#   kubectlImage: bitnami/kubectl:latest
+# Image with kubectl installed. For OpenShift, use an ose-cli image. For
+# non-OpenShift Kubernetes clusters, swap to a plain kubectl image:
+# kubectlImage: bitnami/kubectl:latest
 kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
 
 operators:
