@@ -1,0 +1,3 @@
+# operator-install
+
+Manage operators via OLM with declarative versioning using manual upgrade mode with auto-approving InstallPlans based on Helm values
