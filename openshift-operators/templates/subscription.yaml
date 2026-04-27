@@ -11,8 +11,8 @@ spec:
   source: {{ .source | quote }}
   sourceNamespace: {{ default "openshift-marketplace" .sourceNamespace | quote }}
   installPlanApproval: {{ default "Automatic" .installPlanApproval | quote }}
-  {{- if .startingCSV }}
-  startingCSV: {{ .startingCSV | quote }}
+  {{- if .version }}
+  startingCSV: {{ .version | quote }}
   {{- end }}
   {{- if .config }}
   config:

@@ -10,8 +10,13 @@
 # Optional fields:
 #   sourceNamespace      Namespace of the CatalogSource. Default: "openshift-marketplace".
 #   installPlanApproval  "Automatic" or "Manual". Default: "Automatic".
-#   startingCSV          Pin to a specific CSV version, e.g. "my-operator.v1.2.3".
-#                        Omit (or leave empty) to let OLM pick the latest in the channel.
+#   version              Full CSV name to pin, e.g. "my-operator.v1.2.3".
+#                        Sets startingCSV on the Subscription. Required when using Manual
+#                        approval. Omit to let OLM pick the latest in the channel.
+#                        When installPlanApproval is Manual and version is set, a Job is
+#                        created that approves the matching InstallPlan once OLM creates it.
+#                        Upgrading means bumping this value — a new approval Job is created
+#                        automatically. Completed Jobs are deleted after 10 minutes.
 #   config               SubscriptionConfig block passed verbatim to spec.config.
 #                        Useful for env vars, resource overrides, node selectors, etc.
 #
@@ -50,13 +55,14 @@
 #     createOperatorGroup: true
 #
 # # Manual approval with a pinned version
+# # Bumping `version` is how you approve an upgrade — a new Job is created automatically.
 # operators:
 #   - name: advanced-cluster-management
 #     namespace: open-cluster-management
 #     channel: release-2.10
 #     source: redhat-operators
 #     installPlanApproval: Manual
-#     startingCSV: advanced-cluster-management.v2.10.0
+#     version: advanced-cluster-management.v2.10.0
 #     createNamespace: true
 #     createOperatorGroup: true
 #
@@ -79,6 +85,11 @@
 #         - name: SOME_VAR
 #           value: "some-value"
 
+# Image used by the InstallPlan approval Job.
+# For non-OpenShift Kubernetes clusters, swap to a plain kubectl image:
+#   kubectlImage: bitnami/kubectl:latest
+kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
+
 operators:
   - name: elasticsearch-operator
     namespace: openshift-operators
@@ -88,5 +99,7 @@ operators:
     namespace: openshift-logging
     channel: stable
     source: redhat-operators
+    installPlanApproval: Manual
+    version: cluster-logging.v6.3.0
     createNamespace: true
     createOperatorGroup: true

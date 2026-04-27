@@ -1,0 +1,91 @@
+{{- range .Values.operators }}
+{{- if and (eq (default "Automatic" .installPlanApproval) "Manual") .version }}
+{{- $name := .name }}
+{{- $namespace := .namespace }}
+{{- $version := .version }}
+{{- $jobName := printf "%s-approve-%s" $name $version | replace "." "-" | lower | trunc 63 | trimSuffix "-" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ printf "%s-installplan-approver" $name | quote }}
+  namespace: {{ $namespace | quote }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ printf "%s-installplan-approver" $name | quote }}
+  namespace: {{ $namespace | quote }}
+rules:
+  - apiGroups: ["operators.coreos.com"]
+    resources: ["installplans"]
+    verbs: ["get", "list", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-installplan-approver" $name | quote }}
+  namespace: {{ $namespace | quote }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ printf "%s-installplan-approver" $name | quote }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ printf "%s-installplan-approver" $name | quote }}
+    namespace: {{ $namespace | quote }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $jobName | quote }}
+  namespace: {{ $namespace | quote }}
+spec:
+  # Auto-delete 10 minutes after completion so old version Jobs don't pile up.
+  ttlSecondsAfterFinished: 600
+  # Retry a handful of times to ride out transient API errors.
+  backoffLimit: 10
+  template:
+    spec:
+      serviceAccountName: {{ printf "%s-installplan-approver" $name | quote }}
+      restartPolicy: OnFailure
+      containers:
+        - name: approve
+          image: {{ $.Values.kubectlImage | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              TARGET={{ $version | quote }}
+              NS={{ $namespace | quote }}
+              echo "Waiting for InstallPlan for ${TARGET} in ${NS}..."
+              while true; do
+                for IP in $(kubectl get installplan -n "${NS}" \
+                    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+                  CSVS=$(kubectl get installplan "${IP}" -n "${NS}" \
+                    -o jsonpath='{.spec.clusterServiceVersionNames[*]}' 2>/dev/null)
+                  case " ${CSVS} " in
+                    *" ${TARGET} "*)
+                      APPROVED=$(kubectl get installplan "${IP}" -n "${NS}" \
+                        -o jsonpath='{.spec.approved}')
+                      if [ "${APPROVED}" = "false" ]; then
+                        kubectl patch installplan "${IP}" -n "${NS}" \
+                          --type=merge -p '{"spec":{"approved":true}}'
+                        echo "Approved InstallPlan ${IP} for ${TARGET}"
+                      else
+                        echo "InstallPlan ${IP} for ${TARGET} is already approved"
+                      fi
+                      exit 0
+                      ;;
+                  esac
+                done
+                echo "No matching InstallPlan found yet, retrying in 10s..."
+                sleep 10
+              done
+{{- end }}
+{{- end }}
