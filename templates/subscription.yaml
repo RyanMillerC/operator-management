@@ -1,24 +1,24 @@
-{{- range .Values.operators }}
+{{- range $name, $operator := .Values.operators }}
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: {{ .name | quote }}
-  namespace: {{ .namespace | quote }}
+  name: {{ $name | quote }}
+  namespace: {{ $operator.namespace | quote }}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: Prune=false
 spec:
-  name: {{ .name | quote }}
-  channel: {{ .channel | quote }}
-  source: {{ .source | quote }}
-  sourceNamespace: {{ default "openshift-marketplace" .sourceNamespace | quote }}
-  installPlanApproval: {{ default "Automatic" .installPlanApproval | quote }}
-  {{- if .version }}
-  startingCSV: {{ .version | quote }}
+  name: {{ $name | quote }}
+  channel: {{ $operator.channel | quote }}
+  source: {{ $operator.source | quote }}
+  sourceNamespace: {{ default "openshift-marketplace" $operator.sourceNamespace | quote }}
+  installPlanApproval: {{ default "Automatic" $operator.installPlanApproval | quote }}
+  {{- if $operator.version }}
+  startingCSV: {{ $operator.version | quote }}
   {{- end }}
-  {{- if .config }}
+  {{- if $operator.config }}
   config:
-    {{- toYaml .config | nindent 4 }}
+    {{- toYaml $operator.config | nindent 4 }}
   {{- end }}
 {{- end }}

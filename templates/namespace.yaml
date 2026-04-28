@@ -1,10 +1,10 @@
-{{- range .Values.operators }}
-{{- if .createNamespace }}
+{{- range $name, $operator := .Values.operators }}
+{{- if $operator.createNamespace }}
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ .namespace | quote }}
+  name: {{ $operator.namespace | quote }}
   annotations:
     argocd.argoproj.io/sync-wave: "0"
     argocd.argoproj.io/sync-options: Prune=false

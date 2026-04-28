@@ -1,8 +1,7 @@
-{{- range .Values.operators }}
-{{- if and (eq (default "Automatic" .installPlanApproval) "Manual") .version }}
-{{- $name := .name }}
-{{- $namespace := .namespace }}
-{{- $version := .version }}
+{{- range $name, $operator := .Values.operators }}
+{{- if and (eq (default "Automatic" $operator.installPlanApproval) "Manual") $operator.version }}
+{{- $namespace := $operator.namespace }}
+{{- $version := $operator.version }}
 {{- $jobName := printf "%s-approve-%s" $name $version | replace "." "-" | lower | trunc 63 | trimSuffix "-" }}
 ---
 apiVersion: v1

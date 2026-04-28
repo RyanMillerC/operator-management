@@ -1,22 +1,22 @@
-{{- range .Values.operators }}
-{{- if .createOperatorGroup }}
-{{- $scope := default "Cluster" .scope }}
+{{- range $name, $operator := .Values.operators }}
+{{- if $operator.createOperatorGroup }}
+{{- $scope := default "Cluster" $operator.scope }}
 ---
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: {{ printf "%s-operator-group" .name | quote }}
-  namespace: {{ .namespace | quote }}
+  name: {{ printf "%s-operator-group" $name | quote }}
+  namespace: {{ $operator.namespace | quote }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: Prune=false
 spec:
   {{- if eq $scope "Namespaced" }}
   targetNamespaces:
-    {{- if .targetNamespaces }}
-    {{- toYaml .targetNamespaces | nindent 4 }}
+    {{- if $operator.targetNamespaces }}
+    {{- toYaml $operator.targetNamespaces | nindent 4 }}
     {{- else }}
-    - {{ .namespace | quote }}
+    - {{ $operator.namespace | quote }}
     {{- end }}
   {{- else }}
   {} {{- /* Cluster scope: omit targetNamespaces so the operator watches all namespaces. */}}

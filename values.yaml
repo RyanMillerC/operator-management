@@ -3,10 +3,12 @@
 # kubectlImage: bitnami/kubectl:latest
 kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
 
-# operators is a list of OLM operator descriptors.
+# operators is a map of OLM operator descriptors, keyed by operator (package) name.
+# Using a map instead of a list allows environment-specific values overlays to deep-merge
+# and only override what they need, rather than replacing the entire list.
 #
 # Required fields per operator:
-#   name                 Package name of the operator (used as the Subscription name).
+#   <key>                Package name of the operator (used as the Subscription name).
 #   namespace            Namespace in which the Subscription (and OperatorGroup) are created.
 #   channel              OLM update channel, e.g. "stable", "alpha", "stable-v2".
 #   source               CatalogSource name, e.g. "redhat-operators", "community-operators",
@@ -44,14 +46,14 @@ kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
 #
 # # Cluster-wide (global) operator — standard openshift-operators namespace
 # operators:
-#   - name: elasticsearch-operator
+#   elasticsearch-operator:
 #     namespace: openshift-operators
 #     channel: stable
 #     source: redhat-operators
 #
 # # Namespace-scoped operator in a dedicated namespace
 # operators:
-#   - name: my-operator
+#   my-operator:
 #     namespace: my-operator-ns
 #     channel: alpha
 #     source: community-operators
@@ -62,7 +64,7 @@ kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
 # # Manual approval with a pinned version
 # # Bumping `version` is how you approve an upgrade — a new Job is created automatically.
 # operators:
-#   - name: advanced-cluster-management
+#   advanced-cluster-management:
 #     namespace: open-cluster-management
 #     channel: release-2.10
 #     source: redhat-operators
@@ -73,7 +75,7 @@ kubectlImage: registry.redhat.io/openshift4/ose-cli-rhel9:v4.21
 #
 # # Operator with custom SubscriptionConfig (extra env, resource limits)
 # operators:
-#   - name: jaeger-product
+#   jaeger-product:
 #     namespace: openshift-distributed-tracing
 #     channel: stable
 #     source: redhat-operators

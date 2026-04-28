@@ -31,7 +31,7 @@ OLM does **not** support rollback. Reverting `version` in Git will not downgrade
 
 | Field | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `name` | yes | | OLM package name; used as the Subscription name |
+| `<key>` | yes | | OLM package name; used as the Subscription name |
 | `namespace` | yes | | Namespace for the Subscription and OperatorGroup |
 | `channel` | yes | | OLM update channel (e.g. `stable`, `stable-v2`) |
 | `source` | yes | | CatalogSource name (e.g. `redhat-operators`) |
@@ -51,7 +51,7 @@ OLM does **not** support rollback. Reverting `version` in Git will not downgrade
 
 ```yaml
 operators:
-  - name: elasticsearch-operator
+  elasticsearch-operator:
     namespace: openshift-operators
     channel: stable
     source: redhat-operators
@@ -61,7 +61,7 @@ operators:
 
 ```yaml
 operators:
-  - name: cluster-logging
+  cluster-logging:
     namespace: openshift-logging
     channel: stable
     source: redhat-operators
@@ -75,7 +75,7 @@ operators:
 
 ```yaml
 operators:
-  - name: advanced-cluster-management
+  advanced-cluster-management:
     namespace: open-cluster-management
     channel: release-2.10
     source: redhat-operators
