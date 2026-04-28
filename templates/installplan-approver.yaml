@@ -46,6 +46,8 @@ metadata:
   name: {{ $jobName | quote }}
   namespace: {{ $namespace | quote }}
   annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
     argocd.argoproj.io/sync-wave: "2"
 spec:
   # Auto-delete 10 minutes after completion so old version Jobs don't pile up.
